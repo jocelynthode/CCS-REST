@@ -4,7 +4,12 @@
     <content url="file://$MODULE_DIR$" />
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" scope="PROVIDED" name="ast (v2.2.0, ruby-2.2.3-p173) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="bundler (v1.11.2, ruby-2.2.3-p173) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="parser (v2.3.0.6, ruby-2.2.3-p173) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="powerpack (v0.1.1, ruby-2.2.3-p173) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="rack (v1.6.4, ruby-2.2.3-p173) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="rainbow (v2.1.0, ruby-2.2.3-p173) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="ruby-progressbar (v1.7.5, ruby-2.2.3-p173) [gem]" level="application" />
   </component>
 </module>
