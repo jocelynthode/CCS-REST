@@ -52,11 +52,21 @@ get '/locations' do
 end
 
 get '/connections' do
-  body ({ errors: [{ message: 'not yet implemented' }] }.to_json)
+  uri_param = URI.encode_www_form(params)
+  url = TRANSPORT_EP + '/connections?' + uri_param
+  uri = URI(url)
+  response = Net::HTTP.get_response(uri)
+  result = JSON.parse(response.body)
+  body result.to_json
 end
 
 get '/stationboard' do
-  body ({ errors: [{ message: 'not yet implemented' }] }.to_json)
+  uri_param = URI.encode_www_form(params)
+  url = TRANSPORT_EP + '/stationboard?' + uri_param
+  uri = URI(url)
+  response = Net::HTTP.get_response(uri)
+  result = JSON.parse(response.body)
+  body result.to_json
 end
 
 get '/weather' do
