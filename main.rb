@@ -44,7 +44,7 @@ end
 
 get '/locations' do
   uri_param = URI.encode_www_form(params)
-  uri = URI.join(TRANSPORT_EP, '?' + uri_param)
+  uri = URI.join(TRANSPORT_EP, '/locations?' + uri_param)
   response = Net::HTTP.get_response(uri)
   result = JSON.parse(response.body)
   body result.to_json
