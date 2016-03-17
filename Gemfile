@@ -4,7 +4,10 @@ ruby '2.2.4'
 
 gem 'sinatra'
 gem 'sinatra-contrib'
-gem 'overcommit'
-gem 'rubocop'
 
 gem 'puma'
+
+group :development do
+  gem 'overcommit'
+  gem 'rubocop'
+end
