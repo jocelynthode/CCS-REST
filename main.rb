@@ -43,7 +43,15 @@ get '/ip' do
 end
 
 get '/locations' do
-  body ({ errors: [{ message: 'not yet implemented' }] }.to_json)
+  ip = params['ip']
+  params.delete('ip')
+  uri_param = URI.encode_www_form(params)
+  url = URI.join(TRANSPORT_EP, ip, '?', uri_param)
+  uri = URI(url)
+
+  response = Net::HTTP.get_response(uri)
+  result = JSON.parse(response.body)
+  body result.to_json
 end
 
 get '/connections' do
