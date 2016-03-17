@@ -35,8 +35,13 @@ WEATHER_APPID = '78d387756f815cffc23dc7de1ed27497'
 
 
 # start coding below
-get "/ip" do
-  body ({ errors: [{ message: 'not yet implemented'}]}.to_json)
+get '/ip' do
+  ip = params['ip'] || '130.125.1.11'
+  url = IP_EP + '/' + ip
+  uri = URI(url)
+  response = Net::HTTP.get_response(uri)
+  result = JSON.parse(response.body)
+  body result.to_json
 end
 
 
