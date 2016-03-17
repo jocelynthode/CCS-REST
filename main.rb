@@ -46,9 +46,8 @@ get '/locations' do
   ip = params['ip']
   params.delete('ip')
   uri_param = URI.encode_www_form(params)
-  url = URI.join(TRANSPORT_EP, ip, '?', uri_param)
+  url = URI.join(TRANSPORT_EP, ip + '?' + uri_param)
   uri = URI(url)
-
   response = Net::HTTP.get_response(uri)
   result = JSON.parse(response.body)
   body result.to_json
