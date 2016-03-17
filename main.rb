@@ -31,6 +31,8 @@ IP_EP = 'http://ip-api.com/json'
 TRANSPORT_EP = 'http://transport.opendata.ch/v1'
 WEATHER_EP = 'http://api.openweathermap.org/data/2.5'
 
+WEATHER_APPID = '78d387756f815cffc23dc7de1ed27497'
+
 
 # start coding below
 get "/ip" do
