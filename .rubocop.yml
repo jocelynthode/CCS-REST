@@ -26,25 +26,9 @@ Style/DotPosition:
   Enabled: false
   StyleGuide: http://relaxed.ruby.style/#styledotposition
 
-Style/DoubleNegation:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#styledoublenegation
-
 Style/EndBlock:
   Enabled: false
   StyleGuide: http://relaxed.ruby.style/#styleendblock
-
-Style/FormatString:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#styleformatstring
-
-Style/IfUnlessModifier:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#styleifunlessmodifier
-
-Style/Lambda:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#stylelambda
 
 Style/ModuleFunction:
   Enabled: false
@@ -53,14 +37,6 @@ Style/ModuleFunction:
 Style/MultilineBlockChain:
   Enabled: false
   StyleGuide: http://relaxed.ruby.style/#stylemultilineblockchain
-
-Style/NegatedIf:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#stylenegatedif
-
-Style/NegatedWhile:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#stylenegatedwhile
 
 Style/ParallelAssignment:
   Enabled: false
@@ -110,10 +86,6 @@ Style/TrailingCommaInArguments:
   Enabled: false
   StyleGuide: http://relaxed.ruby.style/#styletrailingcomma
 
-Style/WhileUntilModifier:
-  Enabled: false
-  StyleGuide: http://relaxed.ruby.style/#stylewhileuntilmodifier
-
 Lint/AmbiguousRegexpLiteral:
   Enabled: false
   StyleGuide: http://relaxed.ruby.style/#lintambiguousregexpliteral
@@ -148,4 +120,3 @@ Metrics/ParameterLists:
 
 Metrics/PerceivedComplexity:
   Enabled: false
-
