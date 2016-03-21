@@ -70,11 +70,24 @@ get '/stationboard' do
 end
 
 get '/weather' do
-  body ({ errors: [{ message: 'not yet implemented' }] }.to_json)
+  if params['q'] && (params['lon'] || params['lat'])
+    # TODO: generate error
+  end
+  uri_param = URI.encode_www_form(params)
+  url = WEATHER_EP + "/weather?APPID=#{WEATHER_APPID}&" + uri_param
+  uri = URI(url)
+  response = Net::HTTP.get_response(uri)
+  result = JSON.parse(response.body)
+  body result.to_json
 end
 
 get '/stations' do
-  body ({ errors: [{ message: 'not yet implemented' }] }.to_json)
+  ip = params['ip'] || '130.125.1.11'
+  url = IP_EP + '/' + ip
+  uri = URI(url)
+  response = Net::HTTP.get_response(uri)
+  result = JSON.parse(response.body)
+  body result.to_json
 end
 
 get '/weathers' do
