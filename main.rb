@@ -87,6 +87,19 @@ get '/stations' do
   uri = URI(url)
   response = Net::HTTP.get_response(uri)
   result = JSON.parse(response.body)
+
+  form_param = {}
+  form_param[:station] = result['city']
+  form_param['transportations[]'] = %w(ice_tgv_rj ec_ic ir re_d)
+  form_param = URI.encode_www_form(form_param)
+
+  url = TRANSPORT_EP + '/stationboard?' + form_param # TODO: only display trains
+  puts url
+  uri = URI(url)
+  response = Net::HTTP.get_response(uri)
+  result = JSON.parse(response.body)
+  puts result['stationboard'][0..4]
+  result['stationboard'] = result['stationboard'][0..4]
   body result.to_json
 end
 
