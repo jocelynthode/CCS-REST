@@ -71,7 +71,7 @@ end
 
 get '/weather' do
   if params['q'] && (params['lon'] || params['lat'])
-    # TODO: generate error
+    return [400, { errors: [{ message: %[Cannot use both q and lat/lon parameters at the same time] }] }.to_json]
   end
   uri_param = URI.encode_www_form(params)
   url = WEATHER_EP + "/weather?APPID=#{WEATHER_APPID}&" + uri_param
