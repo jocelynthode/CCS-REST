@@ -93,7 +93,7 @@ get '/stations' do
   form_param['transportations[]'] = %w(ice_tgv_rj ec_ic ir re_d)
   form_param = URI.encode_www_form(form_param)
 
-  url = TRANSPORT_EP + '/stationboard?' + form_param # TODO: only display trains
+  url = TRANSPORT_EP + '/stationboard?' + form_param
   puts url
   uri = URI(url)
   response = Net::HTTP.get_response(uri)
