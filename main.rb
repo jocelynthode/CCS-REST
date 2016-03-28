@@ -104,17 +104,40 @@ get '/stations' do
   form_param = URI.encode_www_form(form_param)
 
   url = TRANSPORT_EP + '/stationboard?' + form_param
-  puts url
   uri = URI(url)
   response = Net::HTTP.get_response(uri)
   result = JSON.parse(response.body)
-  puts result['stationboard'][0..4]
   result['stationboard'] = result['stationboard'][0..4]
   body result.to_json
 end
 
 get '/weathers' do
-  body ({ errors: [{ message: 'not yet implemented' }] }.to_json)
+  ip = params['ip'] || '130.125.1.11'
+  url = IP_EP + '/' + ip
+  uri = URI(url)
+  response = Net::HTTP.get_response(uri)
+  result = JSON.parse(response.body)
+
+  form_param = {}
+  form_param[:station] = result['city']
+  form_param['transportations[]'] = %w(ice_tgv_rj ec_ic ir re_d)
+  form_param = URI.encode_www_form(form_param)
+
+  url = TRANSPORT_EP + '/stationboard?' + form_param
+  uri = URI(url)
+  response = Net::HTTP.get_response(uri)
+  result = JSON.parse(response.body)
+  result['stationboard'] = result['stationboard'][0..4]
+  url = WEATHER_EP + "/weather?APPID=#{WEATHER_APPID}&q="
+  tmp_result = []
+
+  result['stationboard'].each { |destination|
+    uri = URI(url + URI.encode(destination['to']))
+    response = Net::HTTP.get_response(uri)
+    tmp_result << { destination: destination['to'], weather: JSON.parse(response.body) }
+  }
+  tmp_result.sort! { |x, y| x[:weather]['main']['temp'] <=> y[:weather]['main']['temp'] }
+  body tmp_result.to_json
 end
 
 get '/future_weathers' do
