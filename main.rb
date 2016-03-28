@@ -1,8 +1,11 @@
 # Ruby dependencies
 require 'sinatra'
-require 'sinatra/reloader' if development?
 require 'json'
 require 'net/http'
+if development?
+  require 'sinatra/reloader'
+  require 'pry'
+end
 
 # sinatra configuration
 set :show_exceptions, :after_handler
@@ -18,7 +21,9 @@ before do
 end
 
 not_found do
-  body ({ error: 'Ooops, this route does not seem exist' }.to_json)
+  if response.body.empty?
+    body ({ error: 'Ooops, this route does not seem exist' }.to_json)
+  end
 end
 
 error do
@@ -71,14 +76,19 @@ end
 
 get '/weather' do
   if params['q'] && (params['lon'] || params['lat'])
-    return [400, { errors: [{ message: %[Cannot use both q and lat/lon parameters at the same time] }] }.to_json]
+    return [400, { errors: [{ message: 'Cannot use both q and lat/lon parameters at the same time' }] }.to_json]
   end
   uri_param = URI.encode_www_form(params)
   url = WEATHER_EP + "/weather?APPID=#{WEATHER_APPID}&" + uri_param
   uri = URI(url)
   response = Net::HTTP.get_response(uri)
   result = JSON.parse(response.body)
-  body result.to_json
+
+  if result['cod'].to_i == 200
+    body result.to_json
+  else
+    return [result['cod'].to_i, { errors: [{ message: result['message'] }] }.to_json]
+  end
 end
 
 get '/stations' do

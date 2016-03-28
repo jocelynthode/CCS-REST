@@ -10,4 +10,5 @@ gem 'puma'
 group :development do
   gem 'overcommit'
   gem 'rubocop'
+  gem 'pry-byebug'
 end
