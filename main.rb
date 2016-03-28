@@ -22,12 +22,13 @@ end
 
 not_found do
   if response.body.empty?
-    body ({ error: 'Ooops, this route does not seem exist' }.to_json)
+    body ({ errors: [{ message: 'Ooops, this route does not seem exist' }] }.to_json)
   end
 end
 
 error do
-  body ({ error: 'Sorry there was a nasty error - ' + env['sinatra.error'].message }.to_json)
+  errormsg = 'Sorry there was a nasty error - ' + env['sinatra.error'].message
+  body ({ errors: [{ message: errormsg }] }.to_json)
 end
 
 # API endpoints
