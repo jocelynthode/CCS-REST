@@ -137,7 +137,18 @@ get '/weathers' do
     response = Net::HTTP.get_response(uri)
     tmp_result << { destination: destination['to'], weather: JSON.parse(response.body) }
   }
-  tmp_result.sort! { |x, y| x[:weather]['main']['temp'] <=> y[:weather]['main']['temp'] }
+
+  if params['sort'].nil? || params['sort'] == 'temp'
+    tmp_result.sort! { |x, y| y[:weather]['main']['temp'] <=> x[:weather]['main']['temp'] }
+  elsif params['sort'] == 'humidity'
+    tmp_result.sort! { |x, y| y[:weather]['main']['humidity'] <=> x[:weather]['main']['humidity'] }
+  elsif params['sort'] == 'pressure'
+    tmp_result.sort! { |x, y| y[:weather]['main']['pressure'] <=> x[:weather]['main']['pressure'] }
+  elsif params['sort'] == 'cloud'
+    tmp_result.sort! { |x, y| y[:weather]['clouds']['all'] <=> x[:weather]['clouds']['all'] }
+  elsif params['sort'] == 'wind'
+    tmp_result.sort! { |x, y| y[:weather]['wind']['speed'] <=> x[:weather]['wind']['speed'] }
+  end
   body tmp_result.to_json
 end
 
