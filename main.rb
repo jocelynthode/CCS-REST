@@ -21,7 +21,9 @@ before do
 end
 
 not_found do
-  body ({ error: 'Ooops, this route does not seem exist' }.to_json)
+  if response.body.empty?
+    body ({ error: 'Ooops, this route does not seem exist' }.to_json)
+  end
 end
 
 error do
