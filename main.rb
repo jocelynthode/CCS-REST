@@ -1,8 +1,11 @@
 # Ruby dependencies
 require 'sinatra'
-require 'sinatra/reloader' if development?
 require 'json'
 require 'net/http'
+if development?
+  require 'sinatra/reloader'
+  require 'pry'
+end
 
 # sinatra configuration
 set :show_exceptions, :after_handler

@@ -3,10 +3,13 @@ GEM
   specs:
     ast (2.2.0)
     backports (3.6.8)
+    byebug (8.2.2)
     childprocess (0.5.9)
       ffi (~> 1.0, >= 1.0.11)
+    coderay (1.1.1)
     ffi (1.9.10)
     iniparse (1.4.2)
+    method_source (0.8.2)
     multi_json (1.11.2)
     overcommit (0.32.0)
       childprocess (~> 0.5.8)
@@ -14,6 +17,13 @@ GEM
     parser (2.3.0.6)
       ast (~> 2.2)
     powerpack (0.1.1)
+    pry (0.10.3)
+      coderay (~> 1.1.0)
+      method_source (~> 0.8.1)
+      slop (~> 3.4)
+    pry-byebug (3.3.0)
+      byebug (~> 8.0)
+      pry (~> 0.10)
     puma (2.16.0)
     rack (1.6.4)
     rack-protection (1.5.3)
@@ -39,6 +49,7 @@ GEM
       rack-test
       sinatra (~> 1.4.0)
       tilt (>= 1.3, < 3)
+    slop (3.6.0)
     tilt (2.0.2)
     unicode-display_width (1.0.2)
 
@@ -47,6 +58,7 @@ PLATFORMS
 
 DEPENDENCIES
   overcommit
+  pry-byebug
   puma
   rubocop
   sinatra
