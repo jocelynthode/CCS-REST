@@ -46,7 +46,8 @@ def get_response(api_url, path, params)
   JSON.parse(response.body)
 end
 
-def get_ip(ip = '130.125.1.11')
+def get_ip(ip)
+  ip = '130.125.1.11' if ip.nil?
   get_response(IP_EP, '/', [ip])
 end
 
