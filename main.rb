@@ -66,6 +66,25 @@ def parse_params(params)
   params.each { |k, v| params[k] = v.strip.split(/[\s,]+/) if k.end_with? '[]' }
 end
 
+def sort_weathers!(results, sort_by = 'temp')
+  case sort_by
+  when 'temp'
+    results.sort_by! { |x| x[:weather]['main']['temp'] }
+  when 'humidity'
+    results.sort_by! { |x| x[:weather]['main']['humidity'] }
+  when 'pressure'
+    results.sort_by! { |x| x[:weather]['main']['pressure'] }
+  when 'cloud'
+    results.sort_by! { |x| x[:weather]['clouds']['all'] }
+  when 'wind'
+    results.sort_by! { |x| x[:weather]['wind']['speed'] }
+  else
+    return false
+  end
+  results.reverse!
+  true
+end
+
 # start coding below
 get '/ip' do
   body get_ip(params['ip']).to_json
@@ -125,18 +144,11 @@ get '/weathers' do
     tmp_result << { destination: destination['to'], weather: JSON.parse(response.body) }
   }
 
-  if params['sort'].nil? || params['sort'] == 'temp'
-    tmp_result.sort! { |x, y| y[:weather]['main']['temp'] <=> x[:weather]['main']['temp'] }
-  elsif params['sort'] == 'humidity'
-    tmp_result.sort! { |x, y| y[:weather]['main']['humidity'] <=> x[:weather]['main']['humidity'] }
-  elsif params['sort'] == 'pressure'
-    tmp_result.sort! { |x, y| y[:weather]['main']['pressure'] <=> x[:weather]['main']['pressure'] }
-  elsif params['sort'] == 'cloud'
-    tmp_result.sort! { |x, y| y[:weather]['clouds']['all'] <=> x[:weather]['clouds']['all'] }
-  elsif params['sort'] == 'wind'
-    tmp_result.sort! { |x, y| y[:weather]['wind']['speed'] <=> x[:weather]['wind']['speed'] }
+  if sort_weathers! tmp_result, params['sort']
+    body tmp_result.to_json
+  else
+    return [400, { errors: [{ message: 'Given sort criterium doesn\'t exist' }] }.to_json]
   end
-  body tmp_result.to_json
 end
 
 get '/future_weathers' do
@@ -162,16 +174,9 @@ get '/future_weathers' do
     tmp_result << { destination: destination['to'], weather: data }
   }
 
-  if params['sort'].nil? || params['sort'] == 'temp'
-    tmp_result.sort! { |x, y| y[:weather]['main']['temp'] <=> x[:weather]['main']['temp'] }
-  elsif params['sort'] == 'humidity'
-    tmp_result.sort! { |x, y| y[:weather]['main']['humidity'] <=> x[:weather]['main']['humidity'] }
-  elsif params['sort'] == 'pressure'
-    tmp_result.sort! { |x, y| y[:weather]['main']['pressure'] <=> x[:weather]['main']['pressure'] }
-  elsif params['sort'] == 'cloud'
-    tmp_result.sort! { |x, y| y[:weather]['clouds']['all'] <=> x[:weather]['clouds']['all'] }
-  elsif params['sort'] == 'wind'
-    tmp_result.sort! { |x, y| y[:weather]['wind']['speed'] <=> x[:weather]['wind']['speed'] }
+  if sort_weathers! tmp_result, params['sort']
+    body tmp_result.to_json
+  else
+    return [400, { errors: [{ message: 'Given sort criterium doesn\'t exist' }] }.to_json]
   end
-  body tmp_result.to_json
 end
