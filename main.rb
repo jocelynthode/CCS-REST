@@ -62,22 +62,32 @@ def get_and_trim_stations(city)
   result
 end
 
+def parse_params(params)
+  params.each { |k, v| params[k] = v.strip.split(/[\s,]+/) if k.end_with? '[]' }
+end
+
 # start coding below
 get '/ip' do
   body get_ip(params['ip']).to_json
 end
 
 get '/locations' do
+  parse_params(params)
+
   result = get_response(TRANSPORT_EP, '/locations?', params)
   body result.to_json
 end
 
 get '/connections' do
+  parse_params(params)
+
   result = get_response(TRANSPORT_EP, '/connections?', params)
   body result.to_json
 end
 
 get '/stationboard' do
+  parse_params(params)
+
   result = get_response(TRANSPORT_EP, '/stationboard?', params)
   body result.to_json
 end
