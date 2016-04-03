@@ -117,6 +117,7 @@ get '/weathers' do
   result = get_and_trim_stations(result['city'])
   url = WEATHER_EP + "/weather?APPID=#{WEATHER_APPID}&q="
   tmp_result = []
+  # TODO: 404 when no station board ?
 
   result['stationboard'].each { |destination|
     uri = URI(url + URI.encode(destination['to']))
@@ -139,5 +140,38 @@ get '/weathers' do
 end
 
 get '/future_weathers' do
-  body ({ errors: [{ message: 'not yet implemented' }] }.to_json)
+  result = get_ip(params['ip'])
+
+  result = get_and_trim_stations(result['city'])
+  url = WEATHER_EP + "/forecast?APPID=#{WEATHER_APPID}&q="
+  tmp_result = []
+  # TODO: 404 when no station board ?
+
+  # TODO: check nb_days
+  nb_days = params['nb_days'].to_i
+  today = Time.now.to_date
+  result['stationboard'].each { |destination|
+    uri = URI(url + URI.encode(destination['to']))
+    response = Net::HTTP.get_response(uri)
+    data = JSON.parse(response.body)
+    weather = data['list'].find do |forecast|
+      dt = Time.at(forecast['dt'])
+      dt.utc.hour == 12 && (dt.to_date - today) == nb_days
+    end
+    data.merge!(weather).delete('list')
+    tmp_result << { destination: destination['to'], weather: data }
+  }
+
+  if params['sort'].nil? || params['sort'] == 'temp'
+    tmp_result.sort! { |x, y| y[:weather]['main']['temp'] <=> x[:weather]['main']['temp'] }
+  elsif params['sort'] == 'humidity'
+    tmp_result.sort! { |x, y| y[:weather]['main']['humidity'] <=> x[:weather]['main']['humidity'] }
+  elsif params['sort'] == 'pressure'
+    tmp_result.sort! { |x, y| y[:weather]['main']['pressure'] <=> x[:weather]['main']['pressure'] }
+  elsif params['sort'] == 'cloud'
+    tmp_result.sort! { |x, y| y[:weather]['clouds']['all'] <=> x[:weather]['clouds']['all'] }
+  elsif params['sort'] == 'wind'
+    tmp_result.sort! { |x, y| y[:weather]['wind']['speed'] <=> x[:weather]['wind']['speed'] }
+  end
+  body tmp_result.to_json
 end
