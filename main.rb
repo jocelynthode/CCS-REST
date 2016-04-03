@@ -63,7 +63,7 @@ def get_and_trim_stations(city)
 end
 
 def parse_params(params)
-  params.each { |k, v| params[k] = v.strip.split(/[\s,]+/) if k.end_with? '[]' }
+  params.each { |k, v| params[k] = v[0].strip.split(/[\s,]+/) if v.is_a?(Array) }
 end
 
 def sort_weathers!(results, sort_by = 'temp')
@@ -85,14 +85,24 @@ def sort_weathers!(results, sort_by = 'temp')
   true
 end
 
+def show_error(code, message)
+  [code, { errors: [{ message: message }] }.to_json]
+end
+
 # start coding below
 get '/ip' do
   body get_ip(params['ip']).to_json
 end
 
 get '/locations' do
+  if params['query'] && (params['x'] || params['y'])
+    return show_error(400, 'Cannot use both query and x/y parameters at the same time')
+  elsif params['query'].nil? && params['x'].nil? && params['y'].nil?
+    return show_error(400, 'Either query or x/y are required.')
+  elsif params['query'].nil? && (params['x'].nil? || params['y'].nil?)
+    return show_error(400, 'You have to set both x and y.')
+  end
   parse_params(params)
-
   result = get_response(TRANSPORT_EP, '/locations?', params)
   body result.to_json
 end
@@ -113,7 +123,7 @@ end
 
 get '/weather' do
   if params['q'] && (params['lon'] || params['lat'])
-    return [400, { errors: [{ message: 'Cannot use both q and lat/lon parameters at the same time' }] }.to_json]
+    return show_error(400, 'Cannot use both q and lat/lon parameters at the same time')
   end
   result = get_response(WEATHER_EP, "/weather?APPID=#{WEATHER_APPID}&", params)
 
@@ -147,7 +157,7 @@ get '/weathers' do
   if sort_weathers! tmp_result, params['sort']
     body tmp_result.to_json
   else
-    return [400, { errors: [{ message: 'Given sort criterium doesn\'t exist' }] }.to_json]
+    return show_error(400, "Given sort criterion doesn't exist")
   end
 end
 
@@ -177,6 +187,6 @@ get '/future_weathers' do
   if sort_weathers! tmp_result, params['sort']
     body tmp_result.to_json
   else
-    return [400, { errors: [{ message: 'Given sort criterium doesn\'t exist' }] }.to_json]
+    return show_error(400, "Given sort criterion doesn't exist")
   end
 end
