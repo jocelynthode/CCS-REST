@@ -38,40 +38,46 @@ WEATHER_EP = 'http://api.openweathermap.org/data/2.5'.freeze
 
 WEATHER_APPID = '78d387756f815cffc23dc7de1ed27497'.freeze
 
-# start coding below
-get '/ip' do
-  ip = params['ip'] || '130.125.1.11'
-  url = IP_EP + '/' + ip
+def get_response(api_url, path, params)
+  uri_params = URI.encode_www_form(params)
+  url = api_url + path + uri_params
   uri = URI(url)
   response = Net::HTTP.get_response(uri)
-  result = JSON.parse(response.body)
-  body result.to_json
+  JSON.parse(response.body)
+end
+
+def get_ip(ip = '130.125.1.11')
+  get_response(IP_EP, '/', [ip])
+end
+
+def get_and_trim_stations(city)
+  form_param = {}
+  form_param[:station] = city
+  form_param['transportations[]'] = %w(ice_tgv_rj ec_ic ir re_d)
+  get_response(TRANSPORT_EP, '/stationboard?', form_param)
+
+  result = get_response(TRANSPORT_EP, '/stationboard?', form_param)
+  result['stationboard'] = result['stationboard'][0..4]
+  result
+end
+
+# start coding below
+get '/ip' do
+  body get_ip(params['ip']).to_json
 end
 
 get '/locations' do
-  uri_param = URI.encode_www_form(params)
-  url = TRANSPORT_EP + '/locations?' + uri_param
-  uri = URI(url)
-  response = Net::HTTP.get_response(uri)
-  result = JSON.parse(response.body)
+  result = get_response(TRANSPORT_EP, '/locations?', params)
   body result.to_json
 end
 
 get '/connections' do
-  uri_param = URI.encode_www_form(params)
-  url = TRANSPORT_EP + '/connections?' + uri_param
-  uri = URI(url)
-  response = Net::HTTP.get_response(uri)
-  result = JSON.parse(response.body)
+  result = get_response(TRANSPORT_EP, '/connections?', params)
   body result.to_json
 end
 
 get '/stationboard' do
-  uri_param = URI.encode_www_form(params)
-  url = TRANSPORT_EP + '/stationboard?' + uri_param
-  uri = URI(url)
-  response = Net::HTTP.get_response(uri)
-  result = JSON.parse(response.body)
+  result = get_response(TRANSPORT_EP, '/stationboard?', params)
   body result.to_json
 end
 
@@ -79,11 +85,7 @@ get '/weather' do
   if params['q'] && (params['lon'] || params['lat'])
     return [400, { errors: [{ message: 'Cannot use both q and lat/lon parameters at the same time' }] }.to_json]
   end
-  uri_param = URI.encode_www_form(params)
-  url = WEATHER_EP + "/weather?APPID=#{WEATHER_APPID}&" + uri_param
-  uri = URI(url)
-  response = Net::HTTP.get_response(uri)
-  result = JSON.parse(response.body)
+  result = get_response(WEATHER_EP, "/weather?APPID=#{WEATHER_APPID}&", params)
 
   if result['cod'].to_i == 200
     body result.to_json
@@ -93,42 +95,15 @@ get '/weather' do
 end
 
 get '/stations' do
-  ip = params['ip'] || '130.125.1.11'
-  url = IP_EP + '/' + ip
-  uri = URI(url)
-  response = Net::HTTP.get_response(uri)
-  result = JSON.parse(response.body)
-
-  form_param = {}
-  form_param[:station] = result['city']
-  form_param['transportations[]'] = %w(ice_tgv_rj ec_ic ir re_d)
-  form_param = URI.encode_www_form(form_param)
-
-  url = TRANSPORT_EP + '/stationboard?' + form_param
-  uri = URI(url)
-  response = Net::HTTP.get_response(uri)
-  result = JSON.parse(response.body)
-  result['stationboard'] = result['stationboard'][0..4]
+  result = get_ip(params['ip'])
+  result = get_and_trim_stations(result['city'])
   body result.to_json
 end
 
 get '/weathers' do
-  ip = params['ip'] || '130.125.1.11'
-  url = IP_EP + '/' + ip
-  uri = URI(url)
-  response = Net::HTTP.get_response(uri)
-  result = JSON.parse(response.body)
+  result = get_ip(params['ip'])
 
-  form_param = {}
-  form_param[:station] = result['city']
-  form_param['transportations[]'] = %w(ice_tgv_rj ec_ic ir re_d)
-  form_param = URI.encode_www_form(form_param)
-
-  url = TRANSPORT_EP + '/stationboard?' + form_param
-  uri = URI(url)
-  response = Net::HTTP.get_response(uri)
-  result = JSON.parse(response.body)
-  result['stationboard'] = result['stationboard'][0..4]
+  result = get_and_trim_stations(result['city'])
   url = WEATHER_EP + "/weather?APPID=#{WEATHER_APPID}&q="
   tmp_result = []
 
