@@ -21,8 +21,8 @@ before do
 end
 
 not_found do
-  if response.body.empty?
-    body ({ errors: [{ message: 'Ooops, this route does not seem exist' }] }.to_json)
+  unless @http_error_caught
+    halt_errors 404, 'Ooops, this route does not seem exist'
   end
 end
 
@@ -37,6 +37,14 @@ TRANSPORT_EP = 'http://transport.opendata.ch/v1'.freeze
 WEATHER_EP = 'http://api.openweathermap.org/data/2.5'.freeze
 
 WEATHER_APPID = '78d387756f815cffc23dc7de1ed27497'.freeze
+
+def halt_errors(code, *errors)
+  content = {
+    errors: errors.map do |msg| { message: msg } end
+  }
+  @http_error_caught = true
+  halt [code, content.to_json]
+end
 
 def get_response(api_url, path, params)
   uri_params = URI.encode_www_form(params)
@@ -85,10 +93,6 @@ def sort_weathers!(results, sort_by = 'temp')
   true
 end
 
-def show_error(code, message)
-  [code, { errors: [{ message: message }] }.to_json]
-end
-
 # start coding below
 get '/ip' do
   body get_ip(params['ip']).to_json
@@ -96,11 +100,11 @@ end
 
 get '/locations' do
   if params['query'] && (params['x'] || params['y'])
-    return show_error(400, 'Cannot use both query and x/y parameters at the same time')
+    halt_errors 400, 'Cannot use both query and x/y parameters at the same time'
   elsif params['query'].nil? && params['x'].nil? && params['y'].nil?
-    return show_error(400, 'Either query or x/y are required.')
+    halt_errors 400, 'Either query or x/y are required'
   elsif params['query'].nil? && (params['x'].nil? || params['y'].nil?)
-    return show_error(400, 'You have to set both x and y.')
+    halt_errors 400, 'You have to set both x and y'
   end
   parse_params(params)
   result = get_response(TRANSPORT_EP, '/locations?', params)
@@ -123,14 +127,14 @@ end
 
 get '/weather' do
   if params['q'] && (params['lon'] || params['lat'])
-    return show_error(400, 'Cannot use both q and lat/lon parameters at the same time')
+    halt_errors 400, 'Cannot use both q and lat/lon parameters at the same time'
   end
   result = get_response(WEATHER_EP, "/weather?APPID=#{WEATHER_APPID}&", params)
 
   if result['cod'].to_i == 200
     body result.to_json
   else
-    return [result['cod'].to_i, { errors: [{ message: result['message'] }] }.to_json]
+    halt_errors result['cod'].to_i, result['message']
   end
 end
 
@@ -141,13 +145,14 @@ get '/stations' do
 end
 
 get '/weathers' do
-  result = get_ip(params['ip'])
+  location = get_ip(params['ip'])
+  result = get_and_trim_stations(location['city'])
+  if result['stationboard'].empty?
+    halt_errors 404, 'No train connection to this location'
+  end
 
-  result = get_and_trim_stations(result['city'])
   url = WEATHER_EP + "/weather?APPID=#{WEATHER_APPID}&q="
   tmp_result = []
-  # TODO: 404 when no station board ?
-
   result['stationboard'].each { |destination|
     uri = URI(url + URI.encode(destination['to']))
     response = Net::HTTP.get_response(uri)
@@ -157,21 +162,23 @@ get '/weathers' do
   if sort_weathers! tmp_result, params['sort']
     body tmp_result.to_json
   else
-    return show_error(400, "Given sort criterion doesn't exist")
+    halt_errors 400, 'Given sort criterion doesn\'t exist'
   end
 end
 
 get '/future_weathers' do
-  result = get_ip(params['ip'])
-
-  result = get_and_trim_stations(result['city'])
-  url = WEATHER_EP + "/forecast?APPID=#{WEATHER_APPID}&q="
-  tmp_result = []
-  # TODO: 404 when no station board ?
-
-  # TODO: check nb_days
   nb_days = params['nb_days'].to_i
+  halt_errors 400, 'nb_days must be a number between 1 and 5' unless (1..5).cover? nb_days
+
+  location = get_ip(params['ip'])
+  result = get_and_trim_stations(location['city'])
+  if result['stationboard'].empty?
+    halt_errors 404, 'No train connection to this location'
+  end
+
+  url = WEATHER_EP + "/forecast?APPID=#{WEATHER_APPID}&q="
   today = Time.now.to_date
+  tmp_result = []
   result['stationboard'].each { |destination|
     uri = URI(url + URI.encode(destination['to']))
     response = Net::HTTP.get_response(uri)
@@ -187,6 +194,6 @@ get '/future_weathers' do
   if sort_weathers! tmp_result, params['sort']
     body tmp_result.to_json
   else
-    return show_error(400, "Given sort criterion doesn't exist")
+    halt_errors 400, 'Given sort criterion doesn\'t exist'
   end
 end
