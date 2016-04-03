@@ -27,3 +27,6 @@ All the datas are formatted in JSON.
 - `GET /weathers`
 
 - `GET /weathers?ip=178.209.53.76`
+
+## Implementation
+An implementation using this API is available at [WIS-Client](https://github.com/jocelynthode/WIS-Client/) as well a report detailing this implementation.
