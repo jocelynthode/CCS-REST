@@ -64,7 +64,7 @@ def get_and_trim_stations(city)
   form_param[:station] = city
   form_param['transportations[]'] = %w(ice_tgv_rj ec_ic ir re_d)
   get_response(TRANSPORT_EP, '/stationboard?', form_param)
-
+  # TODO: Check if it's an error
   result = get_response(TRANSPORT_EP, '/stationboard?', form_param)
   result['stationboard'] = result['stationboard'][0..4]
   result
@@ -111,6 +111,8 @@ get '/locations' do
     halt_errors 400, 'Either query or x/y are required'
   elsif params['query'].nil? && (params['x'].nil? || params['y'].nil?)
     halt_errors 400, 'You have to set both x and y'
+  elsif params['transportations'] && (params['x'].nil? || params['y'].nil?)
+    halt_errors 400, 'You need to use x and y to use transportations[]'
   end
   result = get_response(TRANSPORT_EP, '/locations?', update_params(params))
   body result.to_json
