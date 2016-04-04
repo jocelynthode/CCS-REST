@@ -70,8 +70,14 @@ def get_and_trim_stations(city)
   result
 end
 
-def parse_params(params)
-  params.each { |k, v| params[k] = v[0].strip.split(/[\s,]+/) if v.is_a?(Array) }
+def update_params(params)
+  params.map { |k, v|
+    if v.is_a?(Array)
+      [k + '[]', v[0].strip.split(/[\s,]+/)]
+    else
+      [k, v]
+    end
+  }.to_h
 end
 
 def sort_weathers!(results, sort_by = 'temp')
@@ -106,22 +112,17 @@ get '/locations' do
   elsif params['query'].nil? && (params['x'].nil? || params['y'].nil?)
     halt_errors 400, 'You have to set both x and y'
   end
-  parse_params(params)
-  result = get_response(TRANSPORT_EP, '/locations?', params)
+  result = get_response(TRANSPORT_EP, '/locations?', update_params(params))
   body result.to_json
 end
 
 get '/connections' do
-  parse_params(params)
-
-  result = get_response(TRANSPORT_EP, '/connections?', params)
+  result = get_response(TRANSPORT_EP, '/connections?', update_params(params))
   body result.to_json
 end
 
 get '/stationboard' do
-  parse_params(params)
-
-  result = get_response(TRANSPORT_EP, '/stationboard?', params)
+  result = get_response(TRANSPORT_EP, '/stationboard?', update_params(params))
   body result.to_json
 end
 
