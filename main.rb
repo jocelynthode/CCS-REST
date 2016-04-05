@@ -51,7 +51,10 @@ def get_response(api_url, path, params)
   url = api_url + path + uri_params
   uri = URI(url)
   response = Net::HTTP.get_response(uri)
-  JSON.parse(response.body)
+  response_body = JSON.parse(response.body)
+
+  halt_errors(response.code, response_body['errors'][0]['message'])
+  response_body
 end
 
 def get_ip(ip)
