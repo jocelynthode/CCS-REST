@@ -53,7 +53,7 @@ def get_response(api_url, path, params)
   response = Net::HTTP.get_response(uri)
   response_body = JSON.parse(response.body)
 
-  halt_errors(response.code, response_body['errors'][0]['message'])
+  halt_errors(response.code.to_i, response_body['errors'][0]['message'])
   response_body
 end
 
