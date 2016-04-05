@@ -66,7 +66,6 @@ def get_and_trim_stations(city)
   form_param = {}
   form_param[:station] = city
   form_param['transportations[]'] = %w(ice_tgv_rj ec_ic ir re_d)
-  get_response(TRANSPORT_EP, '/stationboard?', form_param)
   # TODO: Check if it's an error
   result = get_response(TRANSPORT_EP, '/stationboard?', form_param)
   result['stationboard'] = result['stationboard'][0..4]
@@ -117,22 +116,31 @@ get '/locations' do
   elsif params['transportations'] && (params['x'].nil? || params['y'].nil?)
     halt_errors 400, 'You need to use x and y to use transportations[]'
   end
+
   result = get_response(TRANSPORT_EP, '/locations?', update_params(params))
   body result.to_json
 end
 
 get '/connections' do
+  if params['from'].nil? || params['to'].nil?
+    halt_errors 400, 'from and to are both required'
+  end
+
   result = get_response(TRANSPORT_EP, '/connections?', update_params(params))
   body result.to_json
 end
 
 get '/stationboard' do
+  halt_errors 400, 'station is required' if params['station'].nil?
+
   result = get_response(TRANSPORT_EP, '/stationboard?', update_params(params))
   body result.to_json
 end
 
 get '/weather' do
-  if params['q'] && (params['lon'] || params['lat'])
+  if params['q'].nil? && (params['lon'].nil? || params['lat'].nil?)
+    halt_errors 400, 'Either q or lat and long have to be set'
+  elsif params['q'] && (params['lon'] || params['lat'])
     halt_errors 400, 'Cannot use both q and lat/lon parameters at the same time'
   end
   result = get_response(WEATHER_EP, "/weather?APPID=#{WEATHER_APPID}&", params)
