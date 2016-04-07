@@ -88,8 +88,8 @@ We followed the same format for any error returned to the client. The HTTP statu
   ]
 }
 ```
-This allows us display the errors in a particular manner in the presentation client:
-TODO: screenshot ?
+This allows us display the errors in a particular manner in the presentation client.
+![Error on presentation layer](https://github.com/jocelynthode/CCS-REST/raw/master/report/error_sc.png)
 ### 3.2 Error Handling
 In order to make errors easier to raise, we made a small variadic function `halt_errors` that output the errors in the right format and aborts the request.
 This allows us to handle many errors without polluting the code too much.
