@@ -47,6 +47,7 @@ def halt_errors(code, *errors)
   halt code, content.to_json
 end
 
+# Generic function to request a function from an API
 def get_response(api_url, path, params)
   uri_params = URI.encode_www_form(params)
   url = api_url + path + uri_params
@@ -94,6 +95,7 @@ def get_and_trim_stations(city)
   data
 end
 
+# Update params that are arrays so that they can be encoded using URI.encode_www_forms
 def update_params(params)
   params.map { |k, v|
     if v.is_a?(Array)
@@ -104,6 +106,7 @@ def update_params(params)
   }.to_h
 end
 
+# Sort the result using a criterion in descending order
 def sort_weathers!(results, sort_by = 'temp')
   case sort_by
   when 'temp'
@@ -170,6 +173,7 @@ get '/weather' do
   end
   _, result = get_response(WEATHER_EP, "/weather?APPID=#{WEATHER_APPID}&", params)
 
+  # OpenWeather api returns the code in the JSON, therefore we check it here
   if result['cod'].to_i == 200
     body result.to_json
   else
@@ -190,7 +194,7 @@ get '/weathers' do
 
   url = WEATHER_EP + "/weather?APPID=#{WEATHER_APPID}&q="
   tmp_result = []
-  result['stationboard'].each { |destination|
+  result['stationboard'].each { |destination| # for each destination, find the weather and put it in the array
     uri = URI(url + URI.encode(destination['to']))
     # Refactor using get_response ?
     response = Net::HTTP.get_response(uri)
@@ -206,6 +210,7 @@ end
 
 get '/future_weathers' do
   nb_days = params['nb_days'].to_i
+  # Output an error if nb_days isn't between 1 and 5
   halt_errors 400, 'nb_days must be a number between 1 and 5' unless (1..5).cover? nb_days
 
   location = get_ip(params['ip'])
@@ -214,12 +219,12 @@ get '/future_weathers' do
   url = WEATHER_EP + "/forecast?APPID=#{WEATHER_APPID}&q="
   today = Time.now.to_date
   tmp_result = []
-  result['stationboard'].each { |destination|
+  result['stationboard'].each { |destination| # Same as in /weathers
     uri = URI(url + URI.encode(destination['to']))
     # Refactor using get_response ?
     response = Net::HTTP.get_response(uri)
     data = JSON.parse(response.body)
-    weather = data['list'].find do |forecast|
+    weather = data['list'].find do |forecast| # TODO: Comment
       dt = Time.at(forecast['dt'])
       dt.utc.hour == 12 && (dt.to_date - today) == nb_days
     end
