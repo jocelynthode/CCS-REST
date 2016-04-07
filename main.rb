@@ -199,7 +199,7 @@ get '/weathers' do
     _code, data = get_response(WEATHER_EP, '/weather?', APPID: WEATHER_APPID, q: connection['to'])
 
     # OpenWeather api returns the code in the JSON, therefore we check it here
-    if result['cod'].to_i == 200
+    if data['cod'].to_i == 200
       { destination: connection['to'], weather: data }
     else
       halt_errors result['cod'].to_i, result['message']
@@ -227,7 +227,7 @@ get '/future_weathers' do
     _code, data = get_response(WEATHER_EP, '/forecast?', APPID: WEATHER_APPID, q: connection['to'])
 
     # OpenWeather api returns the code in the JSON, therefore we check it here
-    if result['cod'].to_i == 200
+    if data['cod'].to_i == 200
       # Get the forecast for 12:00 UTC in nb_days
       # Note: We count the days using localtime
       weather = data['list'].find do |forecast|
