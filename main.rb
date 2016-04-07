@@ -1,7 +1,8 @@
 # Ruby dependencies
-require 'sinatra'
+require 'ipaddr'
 require 'json'
 require 'net/http'
+require 'sinatra'
 if development?
   require 'sinatra/reloader'
   require 'pry'
@@ -43,7 +44,7 @@ def halt_errors(code, *errors)
     errors: errors.map do |msg| { message: msg } end
   }
   @http_error_caught = true
-  halt [code, content.to_json]
+  halt code, content.to_json
 end
 
 def get_response(api_url, path, params)
@@ -53,23 +54,44 @@ def get_response(api_url, path, params)
   response = Net::HTTP.get_response(uri)
   response_body = JSON.parse(response.body)
 
-  halt_errors(response.code.to_i, response_body['errors'][0]['message'])
-  response_body
+  [response.code.to_i, response_body]
 end
 
+# TODO: Inform that error handling is already done inside
 def get_ip(ip)
   ip = '130.125.1.11' if ip.nil?
-  get_response(IP_EP, '/', [ip])
+  # Validate IP address by trying to build an IPAddr object
+  begin
+    IPAddr.new(ip)
+  rescue IPAddr::InvalidAddressError
+    halt_errors 400, 'Invalid IP address'
+  end
+
+  code, data = get_response(IP_EP, '/', [ip])
+  # The remote API doesn't use HTTP error code semantically
+  if code != 200
+    halt_errors 500, 'An unknown problem occurred when trying to locate this IP Address'
+  elsif data['status'] != 'success'
+    halt_errors 400, "Couldn't infer location from IP Address: " + data['message']
+  else
+    data
+  end
 end
 
 def get_and_trim_stations(city)
   form_param = {}
   form_param[:station] = city
   form_param['transportations[]'] = %w(ice_tgv_rj ec_ic ir re_d)
-  # TODO: Check if it's an error
-  result = get_response(TRANSPORT_EP, '/stationboard?', form_param)
-  result['stationboard'] = result['stationboard'][0..4]
-  result
+  # TODO: nicely handle types of transportation ?
+  # TODO: Check what happens with uncaught errors
+  code, data = get_response(TRANSPORT_EP, '/stationboard?', form_param)
+  if code != 200
+    halt_errors code, data['errors'].map { |err| err['message'] }
+  elsif data['stationboard'].empty?
+    halt_errors 404, %[Cannot find any connection leaving from "#{city}"]
+  end
+  data['stationboard'] = data['stationboard'][0..4]
+  data
 end
 
 def update_params(params)
@@ -117,7 +139,8 @@ get '/locations' do
     halt_errors 400, 'You need to use x and y to use transportations[]'
   end
 
-  result = get_response(TRANSPORT_EP, '/locations?', update_params(params))
+  code, result = get_response(TRANSPORT_EP, '/locations?', update_params(params))
+  # TODO: handle code != 200, is http code semantic ?
   body result.to_json
 end
 
@@ -126,14 +149,16 @@ get '/connections' do
     halt_errors 400, 'from and to are both required'
   end
 
-  result = get_response(TRANSPORT_EP, '/connections?', update_params(params))
+  code, result = get_response(TRANSPORT_EP, '/connections?', update_params(params))
+  # TODO: handle code != 200, is http code semantic ?
   body result.to_json
 end
 
 get '/stationboard' do
   halt_errors 400, 'station is required' if params['station'].nil?
 
-  result = get_response(TRANSPORT_EP, '/stationboard?', update_params(params))
+  code, result = get_response(TRANSPORT_EP, '/stationboard?', update_params(params))
+  # TODO: check if status: 200 but station: false (for example with wrong transpotation but no station given)
   body result.to_json
 end
 
@@ -143,7 +168,7 @@ get '/weather' do
   elsif params['q'] && (params['lon'] || params['lat'])
     halt_errors 400, 'Cannot use both q and lat/lon parameters at the same time'
   end
-  result = get_response(WEATHER_EP, "/weather?APPID=#{WEATHER_APPID}&", params)
+  _, result = get_response(WEATHER_EP, "/weather?APPID=#{WEATHER_APPID}&", params)
 
   if result['cod'].to_i == 200
     body result.to_json
@@ -155,6 +180,7 @@ end
 get '/stations' do
   result = get_ip(params['ip'])
   result = get_and_trim_stations(result['city'])
+  # TODO: check response code ?
   body result.to_json
 end
 
@@ -169,6 +195,7 @@ get '/weathers' do
   tmp_result = []
   result['stationboard'].each { |destination|
     uri = URI(url + URI.encode(destination['to']))
+    # Refactor using get_response ?
     response = Net::HTTP.get_response(uri)
     tmp_result << { destination: destination['to'], weather: JSON.parse(response.body) }
   }
@@ -195,6 +222,7 @@ get '/future_weathers' do
   tmp_result = []
   result['stationboard'].each { |destination|
     uri = URI(url + URI.encode(destination['to']))
+    # Refactor using get_response ?
     response = Net::HTTP.get_response(uri)
     data = JSON.parse(response.body)
     weather = data['list'].find do |forecast|
