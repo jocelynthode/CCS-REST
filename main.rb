@@ -88,7 +88,7 @@ def get_and_trim_stations(city)
   if code != 200
     halt_errors code, data['errors'].map { |err| err['message'] }
   elsif data['stationboard'].empty?
-    halt_errors 404, %[Cannot find any connection leaving from "#{city}"]
+    halt_errors 404, %[Cannot find any train connections leaving from "#{city}"]
   end
   data['stationboard'] = data['stationboard'][0..4]
   data
@@ -187,9 +187,6 @@ end
 get '/weathers' do
   location = get_ip(params['ip'])
   result = get_and_trim_stations(location['city'])
-  if result['stationboard'].empty?
-    halt_errors 404, 'No train connection to this location'
-  end
 
   url = WEATHER_EP + "/weather?APPID=#{WEATHER_APPID}&q="
   tmp_result = []
@@ -213,9 +210,6 @@ get '/future_weathers' do
 
   location = get_ip(params['ip'])
   result = get_and_trim_stations(location['city'])
-  if result['stationboard'].empty?
-    halt_errors 404, 'No train connection to this location'
-  end
 
   url = WEATHER_EP + "/forecast?APPID=#{WEATHER_APPID}&q="
   today = Time.now.to_date
