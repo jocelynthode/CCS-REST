@@ -141,8 +141,9 @@ get '/locations' do
     halt_errors 400, 'You need to use x and y to use transportations[]'
   end
 
-  _code, result = get_response(TRANSPORT_EP, '/locations?', update_params(params))
-  # TODO: handle code != 200, is http code semantic ?
+  code, result = get_response(TRANSPORT_EP, '/locations?', update_params(params))
+
+  halt_errors code, result['errors'].map { |err| err['message'] } if code != 200
   body result.to_json
 end
 
@@ -151,16 +152,18 @@ get '/connections' do
     halt_errors 400, 'from and to are both required'
   end
 
-  _code, result = get_response(TRANSPORT_EP, '/connections?', update_params(params))
-  # TODO: handle code != 200, is http code semantic ?
+  code, result = get_response(TRANSPORT_EP, '/connections?', update_params(params))
+
+  halt_errors code, result['errors'].map { |err| err['message'] } if code != 200
   body result.to_json
 end
 
 get '/stationboard' do
   halt_errors 400, 'station is required' if params['station'].nil?
 
-  _code, result = get_response(TRANSPORT_EP, '/stationboard?', update_params(params))
-  # TODO: check if status: 200 but station: false (for example with wrong transpotation but no station given)
+  code, result = get_response(TRANSPORT_EP, '/stationboard?', update_params(params))
+
+  halt_errors code, result['errors'].map { |err| err['message'] } if code != 200
   body result.to_json
 end
 
@@ -193,7 +196,7 @@ get '/weathers' do
 
   # retrieve the weather for each destination
   weathers = connections['stationboard'].map do |connection|
-    code, data = get_response(WEATHER_EP, '/weather?', APPID: WEATHER_APPID, q: connection['to'])
+    _code, data = get_response(WEATHER_EP, '/weather?', APPID: WEATHER_APPID, q: connection['to'])
     # TODO: check error code ?
     { destination: connection['to'], weather: data }
   end
@@ -216,7 +219,7 @@ get '/future_weathers' do
   today = Time.now.to_date
   # Retrieve the forecasts for each destination
   weathers = connections['stationboard'].map do |connection|
-    code, data = get_response(WEATHER_EP, '/forecast?', APPID: WEATHER_APPID, q: connection['to'])
+    _code, data = get_response(WEATHER_EP, '/forecast?', APPID: WEATHER_APPID, q: connection['to'])
     # TODO: check error code ?
     # Get the forecast for 12:00 UTC in nb_days
     # Note: We count the days using localtime
