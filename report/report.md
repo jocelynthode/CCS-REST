@@ -1,7 +1,7 @@
 # Cloud Computing: Mini-project 1
 This implementation was made by Simon BRULHART and Jocelyn THODE.
 
-The Project is composed of:
+The project is composed of:
 * CCS-REST
     * Repository: https://github.com/jocelynthode/CCS-REST
     * Public endpoint: https://brulhart-thode-sass-app.herokuapp.com
@@ -96,7 +96,7 @@ We followed the same format for any error returned to the client. The HTTP statu
   ]
 }
 ```
-This allows us display the errors in a particular manner in the presentation client.
+This allows us display errors in a particular manner in the presentation client.
 ![Error on presentation layer](https://github.com/jocelynthode/CCS-REST/raw/master/report/error_sc.png)
 ### 3.2 Error Handling
 In order to make errors easier to raise, we made a small variadic function `halt_errors` that output the errors in the right format and aborts the request.
