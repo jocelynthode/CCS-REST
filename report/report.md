@@ -1,10 +1,18 @@
-# WIS-client
-Simple web page for REST calls of the first mini-project of Cloud Computing at UniNe. This presentation interface contacts our own API which is a mashup of different APIs. This API is provided in our other repo available here : [CCS-Rest](https://github.com/jocelynthode/CCS-REST)
+# Cloud Computing: Mini-project 1
+This implementation was made by Simon BRULHART and Jocelyn THODE.
 
-TODO: it must mentioned clearly at its beginning your name(s) and the URLs for your Github repositories and your apps
+The Project is composed of:
+* CCS-REST
+    * Repository: https://github.com/jocelynthode/CCS-REST
+    * Public endpoint: https://brulhart-thode-sass-app.herokuapp.com
+* WIS-Client
+    * Repository: https://github.com/jocelynthode/WIS-Client
+    * Public endpoint: http://clusterinfo.unineuchatel.ch:10104/
 
 ## 1 Development Environment
 We decided to use our own environment instead of the provided VM, since we already had Rubymine installed. We used RVM to use Ruby 2.2.4. To debug the code we used pry-byebug which is a really helpful debugger.
+
+The presentation server sets the REST endpoint to http://localhost:4000 when running in the development environment.
 
 ## 2 Implementing your own calls
 Below we explain the purpose of the different routes and in some cases a particularity of our code. As we had to repeat a lot of code each we wanted to make a request, we created the following method:
