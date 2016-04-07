@@ -28,8 +28,9 @@ not_found do
 end
 
 error do
-  errormsg = 'Sorry there was a nasty error - ' + env['sinatra.error'].message
-  body ({ errors: [{ message: errormsg }] }.to_json)
+  messages = ['Sorry there was a nasty error']
+  messages.push(env['sinatra.error'].message) if settings.development?
+  body ({ errors: messages.map do |msg| { message: msg } end }).to_json
 end
 
 # API endpoints
