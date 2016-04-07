@@ -9,7 +9,7 @@ if development?
 end
 
 # sinatra configuration
-set :show_exceptions, :after_handler
+set :show_exceptions, false # Never show exceptions
 
 before do
   # allow CORS
@@ -39,6 +39,7 @@ WEATHER_EP = 'http://api.openweathermap.org/data/2.5'.freeze
 
 WEATHER_APPID = '78d387756f815cffc23dc7de1ed27497'.freeze
 
+# start coding below
 def halt_errors(code, *errors)
   content = {
     errors: errors.map do |msg| { message: msg } end
@@ -58,7 +59,7 @@ def get_response(api_url, path, params)
   [response.code.to_i, response_body]
 end
 
-# TODO: Inform that error handling is already done inside
+# Retrieves IP while checking for possible errors
 def get_ip(ip)
   ip = '130.125.1.11' if ip.nil?
   # Validate IP address by trying to build an IPAddr object
@@ -79,12 +80,11 @@ def get_ip(ip)
   end
 end
 
+# Get next 5 destinations from a city
 def get_and_trim_stations(city)
   form_param = {}
   form_param[:station] = city
-  form_param['transportations[]'] = %w(ice_tgv_rj ec_ic ir re_d)
-  # TODO: nicely handle types of transportation ?
-  # TODO: Check what happens with uncaught errors
+  form_param['transportations[]'] = %w(ice_tgv_rj ec_ic ir re_d) # Only trains
   code, data = get_response(TRANSPORT_EP, '/stationboard?', form_param)
   if code != 200
     halt_errors code, data['errors'].map { |err| err['message'] }
@@ -126,7 +126,6 @@ def sort_weathers!(results, sort_by = 'temp')
   true
 end
 
-# start coding below
 get '/ip' do
   body get_ip(params['ip']).to_json
 end
@@ -142,7 +141,7 @@ get '/locations' do
     halt_errors 400, 'You need to use x and y to use transportations[]'
   end
 
-  code, result = get_response(TRANSPORT_EP, '/locations?', update_params(params))
+  _code, result = get_response(TRANSPORT_EP, '/locations?', update_params(params))
   # TODO: handle code != 200, is http code semantic ?
   body result.to_json
 end
@@ -152,7 +151,7 @@ get '/connections' do
     halt_errors 400, 'from and to are both required'
   end
 
-  code, result = get_response(TRANSPORT_EP, '/connections?', update_params(params))
+  _code, result = get_response(TRANSPORT_EP, '/connections?', update_params(params))
   # TODO: handle code != 200, is http code semantic ?
   body result.to_json
 end
@@ -160,7 +159,7 @@ end
 get '/stationboard' do
   halt_errors 400, 'station is required' if params['station'].nil?
 
-  code, result = get_response(TRANSPORT_EP, '/stationboard?', update_params(params))
+  _code, result = get_response(TRANSPORT_EP, '/stationboard?', update_params(params))
   # TODO: check if status: 200 but station: false (for example with wrong transpotation but no station given)
   body result.to_json
 end
@@ -171,7 +170,7 @@ get '/weather' do
   elsif params['q'] && (params['lon'] || params['lat'])
     halt_errors 400, 'Cannot use both q and lat/lon parameters at the same time'
   end
-  _, result = get_response(WEATHER_EP, "/weather?APPID=#{WEATHER_APPID}&", params)
+  _code, result = get_response(WEATHER_EP, "/weather?APPID=#{WEATHER_APPID}&", params)
 
   # OpenWeather api returns the code in the JSON, therefore we check it here
   if result['cod'].to_i == 200
