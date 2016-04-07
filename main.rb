@@ -186,7 +186,6 @@ end
 get '/stations' do
   result = get_ip(params['ip'])
   result = get_and_trim_stations(result['city'])
-  # TODO: check response code ?
   body result.to_json
 end
 
@@ -197,8 +196,13 @@ get '/weathers' do
   # retrieve the weather for each destination
   weathers = connections['stationboard'].map do |connection|
     _code, data = get_response(WEATHER_EP, '/weather?', APPID: WEATHER_APPID, q: connection['to'])
-    # TODO: check error code ?
-    { destination: connection['to'], weather: data }
+
+    # OpenWeather api returns the code in the JSON, therefore we check it here
+    if result['cod'].to_i == 200
+      { destination: connection['to'], weather: data }
+    else
+      halt_errors result['cod'].to_i, result['message']
+    end
   end
 
   if sort_weathers! weathers, params['sort']
@@ -220,15 +224,20 @@ get '/future_weathers' do
   # Retrieve the forecasts for each destination
   weathers = connections['stationboard'].map do |connection|
     _code, data = get_response(WEATHER_EP, '/forecast?', APPID: WEATHER_APPID, q: connection['to'])
-    # TODO: check error code ?
-    # Get the forecast for 12:00 UTC in nb_days
-    # Note: We count the days using localtime
-    weather = data['list'].find do |forecast|
-      dt = Time.at(forecast['dt'])
-      dt.utc.hour == 12 && (dt.to_date - today) == nb_days
+
+    # OpenWeather api returns the code in the JSON, therefore we check it here
+    if result['cod'].to_i == 200
+      # Get the forecast for 12:00 UTC in nb_days
+      # Note: We count the days using localtime
+      weather = data['list'].find do |forecast|
+        dt = Time.at(forecast['dt'])
+        dt.utc.hour == 12 && (dt.to_date - today) == nb_days
+      end
+      data.merge!(weather).delete('list')
+      { destination: connection['to'], weather: data }
+    else
+      halt_errors result['cod'].to_i, result['message']
     end
-    data.merge!(weather).delete('list')
-    { destination: connection['to'], weather: data }
   end
 
   if sort_weathers! weathers, params['sort']
