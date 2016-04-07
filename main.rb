@@ -190,50 +190,47 @@ end
 
 get '/weathers' do
   location = get_ip(params['ip'])
-  result = get_and_trim_stations(location['city'])
+  connections = get_and_trim_stations(location['city'])
 
-  url = WEATHER_EP + "/weather?APPID=#{WEATHER_APPID}&q="
-  tmp_result = []
-  result['stationboard'].each { |destination| # for each destination, find the weather and put it in the array
-    uri = URI(url + URI.encode(destination['to']))
-    # Refactor using get_response ?
-    response = Net::HTTP.get_response(uri)
-    tmp_result << { destination: destination['to'], weather: JSON.parse(response.body) }
-  }
+  # retrieve the weather for each destination
+  weathers = connections['stationboard'].map do |connection|
+    code, data = get_response(WEATHER_EP, '/weather?', APPID: WEATHER_APPID, q: connection['to'])
+    # TODO: check error code ?
+    { destination: connection['to'], weather: data }
+  end
 
-  if sort_weathers! tmp_result, params['sort']
-    body tmp_result.to_json
+  if sort_weathers! weathers, params['sort']
+    body weathers.to_json
   else
     halt_errors 400, 'Given sort criterion doesn\'t exist'
   end
 end
 
 get '/future_weathers' do
+  # Check if nb_days is between 1 and 5
   nb_days = params['nb_days'].to_i
-  # Output an error if nb_days isn't between 1 and 5
   halt_errors 400, 'nb_days must be a number between 1 and 5' unless (1..5).cover? nb_days
 
   location = get_ip(params['ip'])
-  result = get_and_trim_stations(location['city'])
+  connections = get_and_trim_stations(location['city'])
 
-  url = WEATHER_EP + "/forecast?APPID=#{WEATHER_APPID}&q="
   today = Time.now.to_date
-  tmp_result = []
-  result['stationboard'].each { |destination| # Same as in /weathers
-    uri = URI(url + URI.encode(destination['to']))
-    # Refactor using get_response ?
-    response = Net::HTTP.get_response(uri)
-    data = JSON.parse(response.body)
-    weather = data['list'].find do |forecast| # TODO: Comment
+  # Retrieve the forecasts for each destination
+  weathers = connections['stationboard'].map do |connection|
+    code, data = get_response(WEATHER_EP, '/forecast?', APPID: WEATHER_APPID, q: connection['to'])
+    # TODO: check error code ?
+    # Get the forecast for 12:00 UTC in nb_days
+    # Note: We count the days using localtime
+    weather = data['list'].find do |forecast|
       dt = Time.at(forecast['dt'])
       dt.utc.hour == 12 && (dt.to_date - today) == nb_days
     end
     data.merge!(weather).delete('list')
-    tmp_result << { destination: destination['to'], weather: data }
-  }
+    { destination: connection['to'], weather: data }
+  end
 
-  if sort_weathers! tmp_result, params['sort']
-    body tmp_result.to_json
+  if sort_weathers! weathers, params['sort']
+    body weathers.to_json
   else
     halt_errors 400, 'Given sort criterion doesn\'t exist'
   end
