@@ -33,7 +33,7 @@ which makes a standard JSON API call.
 This route returns the location of the provided IP address. If no address is supplied, we use `130.125.1.11`. As we needed to retrieve the IP address for many other routes in this project we decided to encapsulate this functionality in a function called `get_ip` which takes an ip as argument.
 
 ### 2.2 /locations
-This route returns the closest station to the supplied query or x and y coordinates.
+This route returns the closest station to the supplied query or x and y coordinates. On the presentation layer, a **+** button lets the user add additional `transportations[]` parameters if needed. This button is available for every parameters that can be specified multiple time.
 
 ### 2.3 /connections
 This route returns the next connections from a location to another. The `from` and `to` fields are required.
@@ -80,7 +80,7 @@ All of this is done in a function called `sort_weathers!`
 This route works similarily to `/weathers` except it returns the weathers in `nb_days` instead of the current weathers.
 The remote API returns forecasts with a granularity of 3 hours, but we chose to always pick the forecast for 12:00 (12 PM). We thought this behavior to be more user-friendly, since we are more often insterested in the weather for the day than for the night, even if it is 21:00 when looking at the weather.
 
-When counting the days, we start from the current time in the server's timezone, assuming that the user is in the same timezone as the server. This is meant to avoid issues. e.g. The user asks for the weather in 2 days, but instead get the weather in 1 day because the user thinks in 01:00 UTC+2 and the server in 23:00 UTC.
+When counting the days, we start from the current time in the server's timezone, assuming that the user is in the same timezone as the server. This is meant to avoid issues, e.g. the user asks for the weather in 2 days, but instead get the weather in 1 day because the user thinks in 01:00 UTC+2 and the server in 23:00 UTC.
 A better solution would be for the REST API to always work in UTC, and the presentation layer to calculate `nb_days` using the timezone of the browser. Another approach would be for the API to accept an ISO date string instead of a number of days.
 
 We pick the forecast for 12:00 **UTC** because it is simple and close enough to 12:00 in our timezone.
