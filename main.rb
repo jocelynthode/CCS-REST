@@ -127,6 +127,19 @@ def sort_weathers!(results, sort_by = 'temp')
   true
 end
 
+# Halt if the user gives invalid transportations
+def check_transportations(choices)
+  choices ||= []
+  transportations = %w(ice_tgv_rj ec_ic ir re_d ship s_sn_r bus cableway arz_ext tramway_underground)
+  wrong_vals = choices - transportations
+  unless wrong_vals.empty?
+    wrong_vals = choices - transportations
+    halt_errors 400,
+                "Invalid values for transportations: #{wrong_vals.join ' '}",
+                "Allowed values are: #{transportations.join ' '}"
+  end
+end
+
 get '/ip' do
   body get_ip(params['ip']).to_json
 end
@@ -141,6 +154,7 @@ get '/locations' do
   elsif params['transportations'] && (params['x'].nil? || params['y'].nil?)
     halt_errors 400, 'You need to use x and y to use transportations[]'
   end
+  check_transportations params['transportations']
 
   code, result = get_response(TRANSPORT_EP, '/locations?', update_params(params))
 
@@ -149,6 +163,7 @@ get '/locations' do
 end
 
 get '/connections' do
+  check_transportations params['transportations']
   if params['from'].nil? || params['to'].nil?
     halt_errors 400, 'from and to are both required'
   end
@@ -161,6 +176,7 @@ end
 
 get '/stationboard' do
   halt_errors 400, 'station is required' if params['station'].nil?
+  check_transportations params['transportations']
 
   code, result = get_response(TRANSPORT_EP, '/stationboard?', update_params(params))
 
