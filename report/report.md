@@ -40,7 +40,6 @@ This route returns the next connections from a location to another. The `from` a
 
 ### 2.4 /stationboard
 This route returns the next connections leaving from a location. Only the `station` field is required.
-TODO: parler de 404 pas de stations
 
 ### 2.5 /weather
 This route returns the current weather of a location. You can either use the name of the city or its coordinates. If both are set, this leads to an error.
