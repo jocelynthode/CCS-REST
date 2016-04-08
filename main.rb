@@ -100,7 +100,7 @@ end
 def update_params(params)
   params.map { |k, v|
     if v.is_a?(Array)
-      [k + '[]', v[0].strip.split(/[\s,]+/)]
+      [k + '[]', v]
     else
       [k, v]
     end
